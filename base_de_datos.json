@@ -1,0 +1,76 @@
+{
+  "softwares": {
+    "1": {
+      "id": 1,
+      "nombre": "soft1",
+      "version": "2.0.2",
+      "analizado": false,
+      "fecha_evaluacion": 1686518154.114718,
+      "eficacia_porcentaje": 67,
+      "eficiencia_porcentaje": 0,
+      "satisfaccion_porcentaje": 0,
+      "usabilidad_porcentaje": 0
+    }
+  },
+  "evaluaciones": {
+    "1": {
+      "id_soft": 1,
+      "tareas": [
+        [
+          5,
+          5,
+          4
+        ],
+        [
+          5,
+          3,
+          1
+        ],
+        [
+          2,
+          4,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          3,
+          2,
+          3
+        ],
+        [
+          4,
+          4,
+          2
+        ],
+        [
+          5,
+          5,
+          4
+        ]
+      ],
+      "tiempos": [],
+      "puntajes": [],
+      "comentarios": []
+    }
+  },
+  "resultados": {
+    "1": {
+      "id_soft": 1,
+      "eficacia": [
+        62,
+        65,
+        45,
+        58,
+        70,
+        100
+      ],
+      "eficiencia": [],
+      "satifaccion_puntajes": [],
+      "satisfaccion_comentarios": []
+    }
+  }
+}
