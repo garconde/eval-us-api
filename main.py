@@ -783,19 +783,6 @@ def calcular_sat_comentarios(id_soft, comentarios):
             polaridad['pos'] = round((porc_pos * pesos[cont]))
             polaridad['comp'] = round((porc_comp * pesos[cont]))
 
-            #########################################
-            print("-----------------------------------------------------")
-            print("Comentario: ", e)
-            print("Puntaje: ", puntaje)
-            print("Porc_neg: ", porc_neg)
-            print("Porc_neu: ", porc_neu)
-            print("Porc_pos: ", porc_pos)
-            print("Porc_comp: ", porc_comp)
-            print("Polaridad: ", polaridad)
-            print("Contador: ", cont)
-            print("----------------------")
-            #########################################
-
             valores_neg.append(polaridad['neg'])
             valores_neu.append(polaridad['neu'])
             valores_pos.append(polaridad['pos'])
@@ -809,24 +796,10 @@ def calcular_sat_comentarios(id_soft, comentarios):
 
         comentarios_usuarios.append(porcentaje_usuario)
 
-        #########################################
-        print("Porcentaje_usuario: ", porcentaje_usuario)
-        print("Comentarios_usuarios: ", comentarios_usuarios)
-        print("-----------------------------------------------------")
-        #########################################
-
     # Calcular la satisfacción promedio con los comentarios
     suma = sum(c['comp'] for c in comentarios_usuarios)
     cant = len(comentarios_usuarios)
     comentarios_porcentaje = round(suma / cant)
-
-    #########################################
-    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++")
-    print("Suma: ", suma)
-    print("Cantidad: ", cant)
-    print("Comentarios_porcentaje: ", comentarios_porcentaje)
-    print("-----------------------------------------------------")
-    #########################################
 
     # Actualizar los resultados en la base de datos
     resultados.update({"comentarios": comentarios_usuarios}, Query().id_soft == id_soft)
