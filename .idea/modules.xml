@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Evaluador_usabilidad.iml" filepath="$PROJECT_DIR$/.idea/Evaluador_usabilidad.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/eval-us-api.iml" filepath="$PROJECT_DIR$/.idea/eval-us-api.iml" />
     </modules>
   </component>
 </project>

@@ -25,6 +25,7 @@ from datetime import datetime
 from flask import Flask, request, render_template, jsonify
 from tinydb import TinyDB, Query
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from flask_cors import CORS
 
 
 
@@ -47,28 +48,10 @@ SIN_VALOR = -1
 
 
 # Crea una instancia de la aplicación Flask
-app = Flask(__name__) #
+app = Flask(__name__)
 
-
-
-
-
-# Rutas de la API para la gestión de las plantillas para las vistas del aplicativo
-@app.route('/')
-def index():
-    """
-    Renderiza la página de inicio.
-
-    Valor de retorno:
-    Una respuesta que renderiza la plantilla "index.html".
-
-    Notas:
-    - Se asume que se tiene un template llamado "index.html" disponible.
-    """
-
-    return render_template('index.html')
-
-
+# Habilita CORS para todas las rutas
+CORS(app)
 
 
 
@@ -619,7 +602,7 @@ def calcular_eficiencia(id_soft, tiempos):
     if not isinstance(tiempos, list) or len(tiempos) < 2:
         raise ValueError("La lista de tiempos debe contener al menos dos elementos.")
 
-    eficacia_usuarios = []
+    eficiencia_usuarios = []
     referencias = tiempos[0]
 
     # Validar que la lista de referencias contenga solamente elementos numéricos
@@ -656,14 +639,14 @@ def calcular_eficiencia(id_soft, tiempos):
 
         prom_usuario = (sum(valores) / len(valores))
         porcentaje_usuario = round(prom_usuario * 100)
-        eficacia_usuarios.append(porcentaje_usuario)
+        eficiencia_usuarios.append(porcentaje_usuario)
 
     # Calcular la eficiencia promedio
-    eficacia_porcentaje = round(sum(eficacia_usuarios) / len(eficacia_usuarios))
+    eficacia_porcentaje = round(sum(eficiencia_usuarios) / len(eficiencia_usuarios))
 
     # Actualizar los resultados en la base de datos
-    resultados.update({"tiempos": eficacia_usuarios}, Query().id_soft == id_soft)
-    softwares.update({"eficacia": eficacia_porcentaje}, Query().id == id_soft)
+    resultados.update({"tiempos": eficiencia_usuarios}, Query().id_soft == id_soft)
+    softwares.update({"eficiencia": eficacia_porcentaje}, Query().id == id_soft)
 
     # Actualizar el estado del software
     es_analizado(id_soft)
@@ -764,9 +747,16 @@ def calcular_sat_comentarios(id_soft, comentarios):
 
     for comentario in comentarios[1:]:
         cont = 0
-        valores = []
+        valores_neg = []
+        valores_neu = []
+        valores_pos = []
+        valores_comp = []
+
+        porcentaje_usuario = {}
 
         for e in comentario:
+
+            polaridad = {}
 
             # Validar si los valores son cadena de texto
             if not isinstance(e, str):
@@ -775,19 +765,68 @@ def calcular_sat_comentarios(id_soft, comentarios):
             # Calcular el nivel de satisfacción de cada comentario
             puntaje = analizador.polarity_scores(e)
 
-            # Obtener el valor compuesto del comentario
+            # Obtener polaridad del comentario
+            valor_neg = puntaje['neg']
+            valor_neu = puntaje['neu']
+            valor_pos = puntaje['pos']
             valor_compuesto = puntaje['compound']
 
-            # Convertir el valor compuesto a un porcentaje de satisfacción
-            porcentaje = round(((valor_compuesto + 1) / 2) * 100)
-            valores.append(round((porcentaje * pesos[cont])))
+            # Convertir la polaridad a porcentaje
+            porc_neg = round(((valor_neg + 1) / 2) * 100)
+            porc_neu = round(((valor_neu + 1) / 2) * 100)
+            porc_pos = round(((valor_pos + 1) / 2) * 100)
+            porc_comp = round(((valor_compuesto + 1) / 2) * 100)
+
+            # Guardar cada porcentaje en un diccionario luego de multiplicarlo por el peso
+            polaridad['neg'] = round((porc_neg * pesos[cont]))
+            polaridad['neu'] = round((porc_neu * pesos[cont]))
+            polaridad['pos'] = round((porc_pos * pesos[cont]))
+            polaridad['comp'] = round((porc_comp * pesos[cont]))
+
+            #########################################
+            print("-----------------------------------------------------")
+            print("Comentario: ", e)
+            print("Puntaje: ", puntaje)
+            print("Porc_neg: ", porc_neg)
+            print("Porc_neu: ", porc_neu)
+            print("Porc_pos: ", porc_pos)
+            print("Porc_comp: ", porc_comp)
+            print("Polaridad: ", polaridad)
+            print("Contador: ", cont)
+            print("----------------------")
+            #########################################
+
+            valores_neg.append(polaridad['neg'])
+            valores_neu.append(polaridad['neu'])
+            valores_pos.append(polaridad['pos'])
+            valores_comp.append(polaridad['comp'])
             cont = cont + 1
 
-        porcentaje_usuario = round((sum(valores) / sum(pesos)))
+        porcentaje_usuario['neg'] = round((sum(valores_neg) / sum(pesos)))
+        porcentaje_usuario['neu'] = round((sum(valores_neu) / sum(pesos)))
+        porcentaje_usuario['pos'] = round((sum(valores_pos) / sum(pesos)))
+        porcentaje_usuario['comp'] = round((sum(valores_comp) / sum(pesos)))
+
         comentarios_usuarios.append(porcentaje_usuario)
 
+        #########################################
+        print("Porcentaje_usuario: ", porcentaje_usuario)
+        print("Comentarios_usuarios: ", comentarios_usuarios)
+        print("-----------------------------------------------------")
+        #########################################
+
     # Calcular la satisfacción promedio con los comentarios
-    comentarios_porcentaje = round(sum(comentarios_usuarios) / len(comentarios_usuarios))
+    suma = sum(c['comp'] for c in comentarios_usuarios)
+    cant = len(comentarios_usuarios)
+    comentarios_porcentaje = round(suma / cant)
+
+    #########################################
+    print("+++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    print("Suma: ", suma)
+    print("Cantidad: ", cant)
+    print("Comentarios_porcentaje: ", comentarios_porcentaje)
+    print("-----------------------------------------------------")
+    #########################################
 
     # Actualizar los resultados en la base de datos
     resultados.update({"comentarios": comentarios_usuarios}, Query().id_soft == id_soft)
