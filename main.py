@@ -16,11 +16,9 @@ Detalles:
 
 TODO:
 * Separar por funciones usando BluePrint
-* Gestionar las demás vistas
 * Reestructurar el proyecto en carpetas
 """
-
-
+import json
 from datetime import datetime
 from flask import Flask, request, render_template, jsonify
 from tinydb import TinyDB, Query
@@ -85,7 +83,7 @@ def nuevo_software():
 
     # Crear el documento de software
     software = {
-        "id": SIN_VALOR,
+        "id_soft": SIN_VALOR,
         "nombre": soft["nombre"],
         "version": soft["version"],
         "analizado": False,
@@ -102,7 +100,7 @@ def nuevo_software():
     id_gen = softwares.insert(software)
 
     # Actualizar el campo "id" con el ID generado
-    softwares.update({"id": id_gen}, doc_ids=[id_gen])
+    softwares.update({"id_soft": id_gen}, doc_ids=[id_gen])
 
     # Crear el documento de evaluación asociado al software
     evaluacion = {
@@ -176,10 +174,11 @@ def eliminar_soft():
         response = {"error": "Campo 'id_soft' faltante en la solicitud"}
         return jsonify(response), 400
 
-    id_soft = request.json["id_soft"]
+    # Obtener el ID del software especificado y convertirlo a entero
+    id_soft = int(request.json["id_soft"])
 
     # Eliminar el software y sus datos asociados
-    softwares.remove(Query().id == id_soft)
+    softwares.remove(Query().id_soft == id_soft)
     evaluaciones.remove(Query().id_soft == id_soft)
     resultados.remove(Query().id_soft == id_soft)
 
@@ -241,8 +240,8 @@ def guardar_tareas():
         if "id_soft" not in r or "tareas" not in r:
             return jsonify({"error": "Faltan campos obligatorios en el JSON"}), 400
 
-        # Obtener el id_soft del JSON
-        id_soft = r["id_soft"]
+        # Obtener el id_soft del JSON y pasarlo a entero
+        id_soft = int(r["id_soft"])
 
         # Verificar si el id_soft existe en la base de datos
         if not softwares.contains(doc_id=id_soft):
@@ -319,8 +318,8 @@ def guardar_tiempos():
         if "id_soft" not in r or "tiempos" not in r:
             return jsonify({"error": "Faltan campos obligatorios en el JSON"}), 400
 
-        # Obtener el id_soft del JSON
-        id_soft = r["id_soft"]
+        # Obtener el id_soft del JSON y pasarlo a entero
+        id_soft = int(r["id_soft"])
 
         # Verificar si el id_soft existe en la base de datos
         if not softwares.contains(doc_id=id_soft):
@@ -397,8 +396,8 @@ def guardar_puntajes():
         if "id_soft" not in r or "puntajes" not in r:
             return jsonify({"error": "Faltan campos obligatorios en el JSON"}), 400
 
-        # Obtener el id_soft del JSON
-        id_soft = r["id_soft"]
+        # Obtener el id_soft del JSON y pasarlo a entero
+        id_soft = int(r["id_soft"])
 
         # Verificar si el id_soft existe en la base de datos
         if not softwares.contains(doc_id=id_soft):
@@ -472,8 +471,8 @@ def guardar_comentarios():
         if "id_soft" not in r or "comentarios" not in r:
             return jsonify({"error": "Faltan campos obligatorios en el JSON"}), 400
 
-        # Obtener el id_soft del JSON
-        id_soft = r["id_soft"]
+        # Obtener el id_soft del JSON y pasarlo a entero
+        id_soft = int(r["id_soft"])
 
         # Verificar si el id_soft existe en la base de datos
         if not softwares.contains(doc_id=id_soft):
@@ -576,7 +575,7 @@ def calcular_eficacia(id_soft, tareas):
 
     # Actualizar los resultados en la base de datos
     resultados.update({"tareas": eficacia_usuarios}, Query().id_soft == id_soft)
-    softwares.update({"eficacia": eficacia_porcentaje}, Query().id == id_soft)
+    softwares.update({"eficacia": eficacia_porcentaje}, Query().id_soft == id_soft)
 
     # Actualizar el estado del software
     es_analizado(id_soft)
@@ -646,7 +645,7 @@ def calcular_eficiencia(id_soft, tiempos):
 
     # Actualizar los resultados en la base de datos
     resultados.update({"tiempos": eficiencia_usuarios}, Query().id_soft == id_soft)
-    softwares.update({"eficiencia": eficacia_porcentaje}, Query().id == id_soft)
+    softwares.update({"eficiencia": eficacia_porcentaje}, Query().id_soft == id_soft)
 
     # Actualizar el estado del software
     es_analizado(id_soft)
@@ -714,7 +713,7 @@ def calcular_sat_puntajes(id_soft, puntajes):
 
     # Actualizar los resultados en la base de datos
     resultados.update({"puntajes": puntajes_usuarios}, Query().id_soft == id_soft)
-    softwares.update({"satisfaccion_pun": puntajes_porcentaje}, Query().id == id_soft)
+    softwares.update({"satisfaccion_pun": puntajes_porcentaje}, Query().id_soft == id_soft)
 
     # Calcular la satisfacción general
     calcular_satisfaccion(id_soft)
@@ -803,7 +802,7 @@ def calcular_sat_comentarios(id_soft, comentarios):
 
     # Actualizar los resultados en la base de datos
     resultados.update({"comentarios": comentarios_usuarios}, Query().id_soft == id_soft)
-    softwares.update({"satisfaccion_com": comentarios_porcentaje}, Query().id == id_soft)
+    softwares.update({"satisfaccion_com": comentarios_porcentaje}, Query().id_soft == id_soft)
 
     # Calcular la satisfacción general
     calcular_satisfaccion(id_soft)
@@ -823,16 +822,16 @@ def calcular_satisfaccion(id_soft):
     - El valor `SIN_VALOR` se utiliza para indicar una falta de datos en la satisfacción.
     """
 
-    puntuacion_satisfaccion = softwares.get(Query().id == id_soft)["satisfaccion_pun"]
-    comentario_satisfaccion = softwares.get(Query().id == id_soft)["satisfaccion_com"]
+    puntuacion_satisfaccion = softwares.get(Query().id_soft == id_soft)["satisfaccion_pun"]
+    comentario_satisfaccion = softwares.get(Query().id_soft == id_soft)["satisfaccion_com"]
 
     # Verificar si falta algún valor de satisfacción
     if puntuacion_satisfaccion == SIN_VALOR or comentario_satisfaccion == SIN_VALOR:
-        softwares.update({"satisfaccion": SIN_VALOR}, Query().id == id_soft)
+        softwares.update({"satisfaccion": SIN_VALOR}, Query().id_soft == id_soft)
     else:
         # Calcular la satisfacción promedio y redondear al entero más cercano
         satisfaccion_promedio = round((puntuacion_satisfaccion + comentario_satisfaccion) / 2)
-        softwares.update({"satisfaccion": satisfaccion_promedio}, Query().id == id_soft)
+        softwares.update({"satisfaccion": satisfaccion_promedio}, Query().id_soft == id_soft)
 
     # Actualizar el estado de análisis del software
     es_analizado(id_soft)
@@ -858,9 +857,9 @@ def es_analizado(id_soft):
     - El valor 'SIN_VALOR' se utiliza para indicar una falta de datos en las métricas.
     """
 
-    eficacia = softwares.get(Query().id == id_soft)["eficacia"]
-    eficiencia = softwares.get(Query().id == id_soft)["eficiencia"]
-    satisfaccion = softwares.get(Query().id == id_soft)["satisfaccion"]
+    eficacia = softwares.get(Query().id_soft == id_soft)["eficacia"]
+    eficiencia = softwares.get(Query().id_soft == id_soft)["eficiencia"]
+    satisfaccion = softwares.get(Query().id_soft == id_soft)["satisfaccion"]
 
     # Verificar si todas las métricas tienen valores válidos
     if eficacia > SIN_VALOR and eficiencia > SIN_VALOR and satisfaccion > SIN_VALOR:
@@ -869,10 +868,10 @@ def es_analizado(id_soft):
         usabilidad = round((eficacia + eficiencia + satisfaccion) / 3)
 
         # Actualizar el campo 'usabilidad' del software
-        softwares.update({"usabilidad": usabilidad}, Query().id == id_soft)
+        softwares.update({"usabilidad": usabilidad}, Query().id_soft == id_soft)
 
         # Actualizar el estado de análisis del software
-        softwares.update({"analizado": True}, Query().id == id_soft)
+        softwares.update({"analizado": True}, Query().id_soft == id_soft)
 
 
 
@@ -880,6 +879,44 @@ def es_analizado(id_soft):
 
 
 # Rutas de la API REST para obtener datos de la base de datos a través de solicitudes HTTP
+
+@app.route('/obtener_soft', methods=['POST'])
+def obtener_soft():
+    """
+    Obtiene un software de la base de datos.
+
+    Entrada (request JSON):
+    {
+        "id_soft": 1
+    }
+
+    Valor de retorno:
+    Un software con el ID especificado.
+
+    Notas:
+    - El campo "id_soft" debe ser proporcionado en la solicitud.
+    """
+
+    # Verificar si el campo "id_soft" está presente en la solicitud JSON
+    if "id_soft" not in request.json:
+        response = {"error": "Campo 'id_soft' faltante en la solicitud"}
+        return jsonify(response), 400
+
+    # Obtener el ID del software especificado, y convertirlo a entero
+    id_soft = int(request.json["id_soft"])
+
+    # Obtener un software de la base de datos con el ID especificado
+    soft = softwares.get(Query().id_soft == id_soft)
+
+    # Verificar si el software existe en la base de datos
+    if soft is None:
+        response = {"error": "No existe un software con el ID especificado"}
+        return jsonify(response), 404
+
+    # Retornar el software en formato JSON
+    return jsonify(soft), 200
+
+
 
 @app.route('/obtener_val_tareas', methods=['POST'])
 def obtener_val_tareas():
@@ -903,7 +940,8 @@ def obtener_val_tareas():
         response = {"error": "Campo 'id_soft' faltante en la solicitud"}
         return jsonify(response), 400
 
-    id_soft = request.json["id_soft"]
+    # Obtener el ID del software especificado, y convertirlo a entero
+    id_soft = int(request.json["id_soft"])
 
     # Obtener la evaluación del software especificado
     evaluacion = evaluaciones.get(Query().id_soft == id_soft)
@@ -937,7 +975,8 @@ def obtener_val_tiempos():
         response = {"error": "Campo 'id_soft' faltante en la solicitud"}
         return jsonify(response), 400
 
-    id_soft = request.json["id_soft"]
+    # Obtener el ID del software especificado y convertirlo a entero
+    id_soft = int(request.json["id_soft"])
 
     # Obtener la evaluación asociada al software especificado
     evaluacion = evaluaciones.get(Query().id_soft == id_soft)
@@ -971,7 +1010,8 @@ def obtener_val_puntajes():
         response = {"error": "Campo 'id_soft' faltante en la solicitud"}
         return jsonify(response), 400
 
-    id_soft = request.json["id_soft"]
+    # Obtener el ID del software especificado y convertirlo a entero
+    id_soft = int(request.json["id_soft"])
 
     # Obtener la evaluación asociada al software especificado
     evaluacion = evaluaciones.get(Query().id_soft == id_soft)
@@ -1005,7 +1045,8 @@ def obtener_val_comentarios():
         response = {"error": "Campo 'id_soft' faltante en la solicitud"}
         return jsonify(response), 400
 
-    id_soft = request.json["id_soft"]
+    # Obtener el ID del software especificado y convertirlo a entero
+    id_soft = int(request.json["id_soft"])
 
     # Obtener la evaluación asociada al software especificado
     evaluacion = evaluaciones.get(Query().id_soft == id_soft)
@@ -1039,7 +1080,8 @@ def obtener_res_tareas():
         response = {"error": "Campo 'id_soft' faltante en la solicitud"}
         return jsonify(response), 400
 
-    id_soft = request.json["id_soft"]
+    # Obtener el ID del software especificado y convertirlo a entero
+    id_soft = int(request.json["id_soft"])
 
     # Obtener los resultados del software especificado
     resultado = resultados.get(Query().id_soft == id_soft)
@@ -1073,7 +1115,8 @@ def obtener_res_tiempos():
         response = {"error": "Campo 'id_soft' faltante en la solicitud"}
         return jsonify(response), 400
 
-    id_soft = request.json["id_soft"]
+    # Obtener el ID del software especificado y convertirlo a entero
+    id_soft = int(request.json["id_soft"])
 
     # Obtener el resultado del software especificado
     resultado = resultados.get(Query().id_soft == id_soft)
@@ -1107,7 +1150,8 @@ def obtener_res_puntajes():
         response = {"error": "Campo 'id_soft' faltante en la solicitud"}
         return jsonify(response), 400
 
-    id_soft = request.json["id_soft"]
+    # Obtener el ID del software especificado y convertirlo a entero
+    id_soft = int(request.json["id_soft"])
 
     # Obtener el resultado del software especificado
     resultado = resultados.get(Query().id_soft == id_soft)
@@ -1141,7 +1185,8 @@ def obtener_res_comentarios():
         response = {"error": "Campo 'id_soft' faltante en la solicitud"}
         return jsonify(response), 400
 
-    id_soft = request.json["id_soft"]
+    # Obtener el ID del software especificado y convertirlo a entero
+    id_soft = int(request.json["id_soft"])
 
     # Obtener el resultado del software especificado
     resultado = resultados.get(Query().id_soft == id_soft)
