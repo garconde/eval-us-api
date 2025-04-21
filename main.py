@@ -18,9 +18,11 @@ TODO:
 * Separar por funciones usando BluePrint
 * Reestructurar el proyecto en carpetas
 """
-import json
+
+import argostranslate.package
+import argostranslate.translate
 from datetime import datetime
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, jsonify
 from tinydb import TinyDB, Query
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from flask_cors import CORS
@@ -50,6 +52,23 @@ app = Flask(__name__)
 
 # Habilita CORS para todas las rutas
 CORS(app)
+
+
+
+# Configuración de la traducción
+from_code = "es"
+to_code = "en"
+
+# Download and install Argos Translate package
+argostranslate.package.update_package_index()
+available_packages = argostranslate.package.get_available_packages()
+package_to_install = next(
+    filter(
+        lambda x: x.from_code == from_code and x.to_code == to_code, available_packages
+    )
+)
+argostranslate.package.install_from_path(package_to_install.download())
+
 
 
 
@@ -736,7 +755,7 @@ def calcular_sat_comentarios(id_soft, comentarios):
 
     # Validar la lista de puntajes
     if not isinstance(comentarios, list) or len(comentarios) < 2:
-        raise ValueError("La lista de puntajes debe contener al menos dos elementos.")
+        raise ValueError("La lista de comentarios debe contener al menos dos elementos.")
 
     comentarios_usuarios = []
     pesos = comentarios[0]
@@ -759,10 +778,14 @@ def calcular_sat_comentarios(id_soft, comentarios):
 
             # Validar si los valores son cadena de texto
             if not isinstance(e, str):
-                raise ValueError("Los valores de las puntajes deben ser cadenas de texto.")
+                raise ValueError("Los valores de las comentarios deben ser cadenas de texto.")
+
+            # Traducir el comentario al inglés
+            comentario_traducido = traducir_comentario_argos(e)
+
 
             # Calcular el nivel de satisfacción de cada comentario
-            puntaje = analizador.polarity_scores(e)
+            puntaje = analizador.polarity_scores(comentario_traducido)
 
             # Obtener polaridad del comentario
             valor_neg = puntaje['neg']
@@ -771,9 +794,9 @@ def calcular_sat_comentarios(id_soft, comentarios):
             valor_compuesto = puntaje['compound']
 
             # Convertir la polaridad a porcentaje
-            porc_neg = round(((valor_neg + 1) / 2) * 100)
-            porc_neu = round(((valor_neu + 1) / 2) * 100)
-            porc_pos = round(((valor_pos + 1) / 2) * 100)
+            porc_neg = valor_neg * 100
+            porc_neu = valor_neu * 100
+            porc_pos = valor_pos * 100
             porc_comp = round(((valor_compuesto + 1) / 2) * 100)
 
             # Guardar cada porcentaje en un diccionario luego de multiplicarlo por el peso
@@ -872,6 +895,30 @@ def es_analizado(id_soft):
 
         # Actualizar el estado de análisis del software
         softwares.update({"analizado": True}, Query().id_soft == id_soft)
+
+
+
+
+
+
+#Función para traducir comentarios de español a inglés usando Argos Translate
+def traducir_comentario_argos(comentario):
+    """
+    Traduce un comentario del español al inglés usando Argos Translate.
+
+    Args:
+        comentario (str): El comentario en español.
+
+    Returns:
+        str: El comentario traducido al inglés.
+    """
+    try:
+        # Traducir el comentario
+        com_traducido = argostranslate.translate.translate(comentario, "es", "en")
+        return com_traducido
+    except Exception as e:
+        raise ValueError(f"Error al traducir el comentario: {str(e)}")
+
 
 
 
