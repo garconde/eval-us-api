@@ -4,9 +4,12 @@
 
 **Evaluador de Usabilidad** es una API desarrollada en Python que permite gestionar evaluaciones de usabilidad de softwares. A través de una interfaz web sencilla, puedes registrar aplicaciones, realizar evaluaciones y obtener métricas clave como **eficacia**, **eficiencia** y **satisfacción**. Además, incluye análisis de sentimientos y traducción automática para enriquecer los resultados.
 
-Este proyecto fue desarrollado por **David Garcés Conde (@garconde)**.
+Este proyecto fue desarrollado por **David Garcés Conde [(@garconde)](https://github.com/garconde)**.
 
 🔗 Repositorio: [https://github.com/garconde/eval-us-api/](https://github.com/garconde/eval-us-api/)
+
+📄 Documentación del proyecto y anexos (manual de usuario, documento de investigación, etc.):  
+[https://github.com/garconde/trabajo-grado-2025](https://github.com/garconde/trabajo-grado-2025)
 
 ---
 
@@ -34,7 +37,7 @@ Archivo principal de la aplicación. Contiene:
 - Traducción automática con Argos Translate.
 
 📅 Fecha de creación: *15 de junio de 2023*  
-👤 Autor: *David Garcés Conde (@garconde)*
+👤 Autor: *David Garcés Conde [(@garconde)](https://github.com/garconde)*
 
 📌 **Recomendación:** revisa la documentación interna del código para entender la lógica y parámetros de cada método.
 
